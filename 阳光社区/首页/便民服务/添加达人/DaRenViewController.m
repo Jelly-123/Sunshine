@@ -153,7 +153,7 @@
     [self.userName.layer setMasksToBounds:YES];
     self.userName.layer.borderColor = Color.CGColor;
     self.userName.layer.borderWidth = 1.0f;
-    
+    [self.userName addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.userName];
     
     self.name_label = [[UILabel alloc]init];
@@ -167,7 +167,7 @@
     [self.name.layer setMasksToBounds:YES];
     self.name.layer.borderColor = Color.CGColor;
     self.name.layer.borderWidth = 1.0f;
-    
+    [self.name addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.name];
     
     self.yiming_label = [[UILabel alloc]init];
@@ -181,6 +181,7 @@
     [self.yiming.layer setMasksToBounds:YES];
     self.yiming.layer.borderColor = Color.CGColor;
     self.yiming.layer.borderWidth = 1.0f;
+    [self.yiming addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.yiming];
     
     
@@ -195,7 +196,7 @@
     [self.mobile.layer setMasksToBounds:YES];
     self.mobile.layer.borderColor = Color.CGColor;
     self.mobile.layer.borderWidth = 1.0f;
-    
+    [self.mobile addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.mobile];
     
     
@@ -210,34 +211,13 @@
     [self.address.layer setMasksToBounds:YES];
     self.address.layer.borderColor = Color.CGColor;
     self.address.layer.borderWidth = 1.0f;
-    
+    [self.address addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.address];
     
-    
-//    self.fengcai_label = [[UILabel alloc]init];
-//    self.fengcai_label.text = @"个人风采:";
-//    self.fengcai_label.frame = CGRectMake(10,margin*7+space*5+noteTextHeight, WidthVC-20, space);
-//    [_mianScrollView addSubview: self.fengcai_label];
-    
 
-    
-
-    
-    //文本输入框
-//    self.techang_textview = [[UITextView alloc] initWithFrame:CGRectMake(10, margin*7+space*5+120,SCREEN_WIDTH*0.7, 100)];
-//    self.techang_textview.backgroundColor = [UIColor whiteColor];
-//    self.techang_textview.delegate = self;
-//     self.techang_textview.scrollEnabled = NO;
-//    self.techang_textview.editable = YES;
-//    self.techang_textview.layer.borderWidth = 3.0;
-//    self.techang_textview.layer.borderColor = Color.CGColor;
-//    self.techang_textview.font = [UIFont systemFontOfSize:14];
-//    // 将 textView 添加到 view
-//    [_mianScrollView addSubview:self.techang_textview];
     
 
     _noteTextView = [[BRPlaceholderTextView alloc]init];
-//    _noteTextView.frame = CGRectMake(10+SCREEN_WIDTH*0.2, margin*7+space*5+120,SCREEN_WIDTH*0.7, 100);
     _noteTextView.keyboardType = UIKeyboardTypeDefault;
     //文字样式
     [_noteTextView setFont:[UIFont fontWithName:@"Heiti SC" size:15.5]];
@@ -251,8 +231,7 @@
     self.noteTextView.returnKeyType = UIReturnKeyDone;
     [self.noteTextView setPlaceholderColor:[UIColor grayColor]];
     [self.noteTextView setPlaceholderOpacity:1];
-//    [[NSNotificationCenter defaultCenter]addObserver:self.noteTextView selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
-//    [self.noteTextView addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
+
     
     
     _textNumberLabel = [[UILabel alloc]init];
@@ -285,11 +264,25 @@
     
 }
 
-//- (BOOL)textViewShouldBeginEditing:(UITextView *)textView {
-//    self.view.frame = CGRectMake(0, 0-200*_TimeNUMY, WidthVC,HeightVC);
-//    return YES;
-//
-//}
+-(void)Rigist_textFiledChange:(UITextField *)theTextFiled{
+    
+    if(theTextFiled == self.userName){
+        NSLog(@"%@",theTextFiled.text);
+        self.mingzi_para = self.userName.text;
+    }else if(theTextFiled == self.name){
+        NSLog(@"%@",theTextFiled.text);
+        self.realName_para = self.name.text;
+    }else if(theTextFiled == self.yiming){
+        NSLog(@"%@",theTextFiled.text);
+        self.stageName_para = self.yiming.text;
+    }else if(theTextFiled == self.address){
+        NSLog(@"%@",theTextFiled.text);
+        self.Address_para = self.address.text;
+    }else if(theTextFiled == self.mobile){
+        NSLog(@"%@",theTextFiled.text);
+        self.Phone_para = self.mobile.text;
+    }
+}
 
 
 /**
@@ -431,6 +424,14 @@
         NSLog(@"最多上传4张照片!");
         
     }
+    self.activity_indicator_view = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    self.activity_indicator_view.center = _mianScrollView.center;
+    [self.activity_indicator_view setUserInteractionEnabled:YES];//点击不传递事件到button
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleGray];
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    [self.activity_indicator_view setBackgroundColor:[UIColor lightGrayColor]];
+    [_mianScrollView addSubview:self.activity_indicator_view];
+    [self.activity_indicator_view startAnimating];
     dispatch_group_t group = dispatch_group_create();
     dispatch_group_async(group,dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self request];
@@ -438,20 +439,7 @@
     });
     dispatch_group_notify(group, dispatch_get_main_queue(), ^{
         NSLog(@"okay");
-//        
-//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提醒"
-//                                                                       message:@"发表成功"
-//                                                                preferredStyle:UIAlertControllerStyleAlert];
-//        //取消支付
-//        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
-//            //这里应该接后台api 将数据输过去，等待平台管理人员确认，再在订单页面显示
-//            [self.navigationController popViewControllerAnimated:YES];
-//        }];
-//        
-//        [alert addAction:cancelAction];
-//        
-//        
-//        [self presentViewController:alert animated:YES completion:nil];
+
     });
     
 }
@@ -460,9 +448,10 @@
     NSLog(@"cewfe:%@",self.photoArr);
     //js调用添加达人时需要传给客户端appUserId、hotelId
             NSString * url = [NSString stringWithFormat:@"%@/ShoppingInterface/hscm/common/addFindTalent?%@",darenurl,para];
-    NSLog(@"ddddddddd:%@",url);
-    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.name.text, @"realName",self.mobile.text,@"phone",self.noteTextView.text,@"introduction",self.address.text,@"address",self.appUserId,@"appUserId",self.hotelId,@"hotelId",self.yiming.text,@"stageName",self.userName.text,@"name",nil];
     
+    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.realName_para, @"realName",self.Phone_para,@"phone",self.noteTextView.text,@"introduction",self.Address_para,@"address",self.appUserId,@"appUserId",self.hotelId,@"hotelId",self.stageName_para,@"stageName",self.mingzi_para,@"name",nil];
+    NSLog(@"添加达人url:%@",url);
+    NSLog(@"参数:%@",dic);
     
     // 基于AFN3.0+ 封装的HTPPSession句柄
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
@@ -494,7 +483,7 @@
              3. fileName：要保存在服务器上的文件名
              4. mimeType：上传的文件的类型
              */
-            [formData appendPartWithFileData:imageData name:@"Images" fileName:fileName mimeType:@"image/jpeg"]; //
+            [formData appendPartWithFileData:imageData name:@"images" fileName:fileName mimeType:@"image/jpeg"]; //
         }
         
     } progress:^(NSProgress * _Nonnull uploadProgress) {
@@ -502,7 +491,7 @@
         NSLog(@"---上传进度--- %@",uploadProgress);
         
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-        
+         [self.activity_indicator_view stopAnimating];
         NSLog(@"```上传成功``` %@",responseObject);
         NSString * resultCode = [responseObject objectForKey:@"resultDesc"];
         NSLog(@"```resultCode``` %@",resultCode);
@@ -522,7 +511,7 @@
             [self presentViewController:alert animated:YES completion:nil];
         }
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        
+         [self.activity_indicator_view stopAnimating];
         NSLog(@"xxx上传失败xxx %@", error);
         UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"提醒" message:@"上传失败，请重新上传" preferredStyle:UIAlertControllerStyleAlert];
         UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {

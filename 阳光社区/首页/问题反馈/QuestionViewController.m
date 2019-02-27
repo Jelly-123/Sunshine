@@ -11,6 +11,7 @@
 #import "ToolHeader.h"
 #import "DIYAFNetworking.h"
 #import "AFNetworking.h"
+#import "HWDownSelectedView.h"
 #define iphone4 (CGSizeEqualToSize(CGSizeMake(320, 480), [UIScreen mainScreen].bounds.size))
 #define iphone5 (CGSizeEqualToSize(CGSizeMake(320, 568), [UIScreen mainScreen].bounds.size))
 #define iphone6 (CGSizeEqualToSize(CGSizeMake(375, 667), [UIScreen mainScreen].bounds.size))
@@ -21,7 +22,7 @@
 #define space 30
 #define HeightVC [UIScreen mainScreen].bounds.size.height//获取设备高度
 #define WidthVC [UIScreen mainScreen].bounds.size.width//获取设备宽度
-@interface QuestionViewController ()<UIScrollViewDelegate,UITextViewDelegate>
+@interface QuestionViewController ()<UIScrollViewDelegate,UITextViewDelegate,UITextFieldDelegate,HWDownSelectedViewDelegate>
 {
     float _TimeNUMX;
     float _TimeNUMY;
@@ -58,7 +59,18 @@
 @property (nonatomic,copy)   NSString * photoStr;
 
 @property (nonatomic,copy)   NSString * modelUrl;
-
+@property(nonatomic,strong)UILabel * louhaoLabel;
+@property(nonatomic,strong)UILabel * danyunhao;
+@property(nonatomic,strong)UILabel * fangjianhao;
+@property(nonatomic,strong)UILabel * time;
+@property(nonatomic,strong)UITextField *roomTF;
+@property(nonatomic,strong)UITextField * timeTF;
+@property(nonatomic,strong)UIDatePicker * datepicker;
+@property(nonatomic,strong)UIToolbar * toolBar;
+@property (nonatomic, weak) HWDownSelectedView * louhaoDown;   //民族
+@property (nonatomic, weak) HWDownSelectedView * danyuanDown;   //民族
+@property(nonatomic,strong)NSMutableArray *FloorNumArray;
+@property(nonatomic,strong)NSMutableArray *FloorCellArray;
 @end
 
 
@@ -92,7 +104,19 @@
     _TimeNUMX = [self BackTimeNUMX];
     _TimeNUMY = [self BackTimeNUMY];
     
-    [self createUI];
+    _FloorNumArray = [NSMutableArray arrayWithCapacity:1];
+    _FloorCellArray =[NSMutableArray arrayWithCapacity:1];
+    
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_group_async(group,dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        [self requestLouhao];
+        
+    });
+//    dispatch_group_notify(group, queue, ^{
+//         [self requestdanyuan:self.danyuanhaoStr];
+//    });
+   [self createUI];
     
     
 }
@@ -146,18 +170,81 @@
     [self.userName.layer setMasksToBounds:YES];
     self.userName.layer.borderColor = Color.CGColor;
     self.userName.layer.borderWidth = 1.0f;
-    
+    [self.userName addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.userName];
+    
+    self.louhaoLabel  = [[UILabel alloc]init];
+    self.louhaoLabel.text = @"楼号:";
+    self.louhaoLabel.frame = CGRectMake(10,margin*2+space,SCREEN_WIDTH*0.2, space);
+    [_mianScrollView addSubview: self.louhaoLabel];
+    
+    HWDownSelectedView * louhao = [[HWDownSelectedView alloc]init];
+    louhao.backgroundColor = [UIColor whiteColor];
+    louhao.listArray = self.FloorNumArray;
+    louhao.delegate = self;
+    louhao.frame = CGRectMake(10+SCREEN_WIDTH *0.2, margin*2+space,SCREEN_WIDTH*0.7,space);
+    
+    self.louhaoDown = louhao;
+    [_mianScrollView addSubview:self.louhaoDown];
+
+    self.danyunhao  = [[UILabel alloc]init];
+    self.danyunhao.text = @"单元号:";
+    self.danyunhao.frame = CGRectMake(10,margin*3+space*2,SCREEN_WIDTH*0.2, space);
+    [_mianScrollView addSubview: self.danyunhao];
+    
+    HWDownSelectedView * danyuan = [HWDownSelectedView new];
+    danyuan.backgroundColor = [UIColor whiteColor];
+//    danyuan.listArray = self.FloorCellArray;
+    danyuan.delegate = self;
+    danyuan.frame = CGRectMake(10+SCREEN_WIDTH *0.2, margin*3+space*2,SCREEN_WIDTH*0.7,space);
+    [_mianScrollView addSubview:danyuan];
+    self.danyuanDown = danyuan;
+    
+    self.fangjianhao  = [[UILabel alloc]init];
+    self.fangjianhao.text = @"房间号:";
+    self.fangjianhao.frame = CGRectMake(10,margin*4+space*3,SCREEN_WIDTH*0.2, space);
+    [_mianScrollView addSubview: self.fangjianhao];
+    
+    self.roomTF = [[UITextField alloc]initWithFrame:CGRectMake(10+SCREEN_WIDTH*0.2,margin*4+space*3,SCREEN_WIDTH*0.7,space)];
+    self.roomTF.layer.cornerRadius = 5.0;
+    self.roomTF.keyboardType = UIKeyboardTypeNumbersAndPunctuation;
+    [self.roomTF.layer setMasksToBounds:YES];
+    self.roomTF.layer.borderColor = Color.CGColor;
+    self.roomTF.layer.borderWidth = 1.0f;
+    [_mianScrollView addSubview:self.roomTF];
+    
+    self.time  = [[UILabel alloc]init];
+    self.time.text = @"发生时间:";
+    self.time.frame = CGRectMake(10,margin*5+space*4,SCREEN_WIDTH*0.2, space);
+    [_mianScrollView addSubview: self.time];
+    
+    self.timeTF = [[UITextField alloc]initWithFrame:CGRectMake(10+SCREEN_WIDTH*0.2,margin*5+space*4,SCREEN_WIDTH*0.7,space)];
+    self.timeTF.delegate = self;
+    self.timeTF.layer.cornerRadius = 5.0;
+    [self.timeTF.layer setMasksToBounds:YES];
+    self.timeTF.layer.borderColor = Color.CGColor;
+    self.timeTF.layer.borderWidth = 1.0f;
+    [_mianScrollView addSubview:self.timeTF];
+
+    self.toolBar = [[UIToolbar alloc]init];
+    self.toolBar.frame =CGRectMake(0, 0, SCREEN_WIDTH, 44);
+    UIBarButtonItem * item = [[UIBarButtonItem alloc]initWithTitle:@"完成" style:UIBarButtonItemStylePlain target:self action:@selector(click)];
+    self.toolBar.items =@[item];
+    
+    self.datepicker = [[UIDatePicker alloc]init];
+    self.datepicker.datePickerMode = UIDatePickerModeDateAndTime;
+    NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"zh_CN"];//设置为中文
+    self.datepicker.locale = locale;
     
     self.name_label = [[UILabel alloc]init];
     self.name_label.text = @"内容:";
-    self.name_label.frame = CGRectMake(10,margin*2+space,SCREEN_WIDTH*0.2, space);
+    self.name_label.frame = CGRectMake(10,margin*6+space*5,SCREEN_WIDTH*0.2, space);
     [_mianScrollView addSubview: self.name_label];
     
     
     //文本输入框
     _noteTextView = [[BRPlaceholderTextView alloc]init];
-    _noteTextView.frame = CGRectMake(10+SCREEN_WIDTH*0.2,margin*2+space,SCREEN_WIDTH*0.7, space*5);
+    _noteTextView.frame = CGRectMake(10+SCREEN_WIDTH*0.2,margin*6+space*5,SCREEN_WIDTH*0.7, space*5);
     _noteTextView.keyboardType = UIKeyboardTypeDefault;
     //文字样式
     [_noteTextView setFont:[UIFont fontWithName:@"Heiti SC" size:15.5]];
@@ -179,7 +266,7 @@
     
     //确定按钮
     self.sureBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 80, 20)];
-    [self.sureBtn setTitle:@"发表" forState:UIControlStateNormal];
+    [self.sureBtn setTitle:@"确定" forState:UIControlStateNormal];
     self.sureBtn.titleLabel.font = [UIFont systemFontOfSize:17.0+_FontSIZE];
     [self.sureBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     self.sureBtn.layer.masksToBounds = YES;
@@ -188,16 +275,111 @@
     self.navigationItem.rightBarButtonItem = rightitem;
     [self.sureBtn addTarget:self action:@selector(change) forControlEvents:UIControlEventTouchUpInside];
     
-    
-    
-    
     [_mianScrollView addSubview:_noteTextBackgroudView];
     [_mianScrollView addSubview:_noteTextView];
     
     [self updateViewsFrame];
     
 }
+- (void)downSelectedView:(HWDownSelectedView *)selectedView didSelectedAtIndex:(NSIndexPath *)indexPath{
+    if (selectedView == self.louhaoDown) {
+        self.louhaoStr =self.louhaoDown.listArray[indexPath.row];
+        
+    
+        //3.分隔字符串
+   
+        
+        NSArray *array = [self.louhaoStr componentsSeparatedByString:@"号"]; //从字符A中分隔成2个元素的数组
+           NSLog(@"楼号选择的是:%@",array[0]);
+        dispatch_group_t group = dispatch_group_create();
+        dispatch_group_async(group,dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            
+            [self requestdanyuan:array[0]];
+            
+        });
+        dispatch_group_notify(group,dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            self.danyuanDown.listArray = self.FloorCellArray;
+        });
+    }else if(selectedView == self.danyuanDown){
+        self.danyuanhaoStr =self.danyuanDown.listArray[indexPath.row];
 
+        NSLog(@"单元选择的是:%@",self.danyuanDown.listArray[indexPath.row]);
+    }
+}
+-(void)requestLouhao{
+    //问题反馈 需要参数：hotelId  appUserId  type
+    
+    
+    NSString * url = [NSString stringWithFormat:@"%@/SmartHotelInterface/api/appUser/queryFloorNum?%@",dangyuanURL,para];
+    [DIYAFNetworking PostHttpDataWithUrlStr:url Dic:nil SuccessBlock:^(id responseObject) {
+        if ([responseObject[@"resultDesc"] isEqualToString:@"操作成功"]) {
+            for (NSDictionary * dic in responseObject[@"dataList"]) {
+                NSString * str = [NSString stringWithFormat:@"%@号楼",dic[@"floorNum"]];
+                [self.FloorNumArray addObject:str];
+            }
+
+        }else{
+            UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"获取楼号失败" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                [self.navigationController popViewControllerAnimated:YES];
+            }];
+            [alert addAction:sureAction];
+            [self presentViewController:alert animated:YES completion:nil];
+        }
+        
+    } FailureBlock:^(id error) {
+        //        NSLog(@"error",error);
+    }];
+}
+-(void)requestdanyuan:(NSString *)danyuan{
+    NSString * url = [NSString stringWithFormat:@"%@/SmartHotelInterface/api/appUser/queryFloorCell?%@",dangyuanURL,para];
+    NSDictionary * dic = [NSDictionary dictionaryWithObjectsAndKeys:danyuan,@"floorNum",nil];
+    [DIYAFNetworking PostHttpDataWithUrlStr:url Dic:dic SuccessBlock:^(id responseObject) {
+        NSLog(@"11111%@",responseObject);
+        if ([responseObject[@"resultDesc"] isEqualToString:@"操作成功"]) {
+            NSLog(@"ddd:%@",responseObject[@"dataList"]);
+
+            for (NSDictionary * dic in responseObject[@"dataList"]) {
+                NSString * str = [NSString stringWithFormat:@"%@单元",dic[@"floorCell"]];
+                [self.FloorCellArray addObject:str];
+            }
+            if (self.FloorCellArray.count == 0) {
+                self.danyuanDown.placeholder = @"暂无数据";
+            }else{
+                self.danyuanDown.placeholder = @"点击选择";
+                 self.danyuanDown.listArray = self.FloorCellArray;
+            }
+           
+            NSLog(@"33333%@",self.FloorCellArray);
+            
+        }else{
+            UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"获取支部失败" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                [self.navigationController popViewControllerAnimated:YES];
+            }];
+            [alert addAction:sureAction];
+            [self presentViewController:alert animated:YES completion:nil];
+        }
+        
+    } FailureBlock:^(id error) {
+        //        NSLog(@"error",error);
+    }];
+}
+-(void)click{
+    NSData * selected = [self.datepicker date];
+    NSDateFormatter * formatter = [[NSDateFormatter alloc]init];
+    formatter.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+    NSString * dataString = [formatter stringFromDate:selected];
+    self.timeTF.text = dataString;
+    [self.timeTF resignFirstResponder];
+}
+-(BOOL)textFieldShouldBeginEditing:(UITextField *)textField{
+    if(textField == self.timeTF){
+        self.timeTF.inputView = self.datepicker;
+        self.timeTF.inputAccessoryView =self.toolBar;
+    }
+    return YES;
+}
 
 
 
@@ -216,7 +398,7 @@
     
     
     
-    _mianScrollView.contentSize = self.mianScrollView.contentSize = CGSizeMake(0,SCREEN_HEIGHT);
+    _mianScrollView.contentSize = self.mianScrollView.contentSize = CGSizeMake(0,SCREEN_HEIGHT+100);
 }
 
 
@@ -231,7 +413,7 @@
     NSLog(@"fefew:%@",self.noteTextView.text);
     if (self.noteTextView.text.length == 0 ) {
         NSLog(@"您的描述字数不够哦!");
-        UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"添加达人" message:@"您的描述字数不够哦!" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"问题反馈" message:@"您的描述字数不够哦!" preferredStyle:UIAlertControllerStyleAlert];
         UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             
         }];
@@ -247,31 +429,48 @@
     self.photoArr = [[NSMutableArray alloc] initWithArray:[self getBigImageArray]];
     
     if (self.photoArr.count >9){
-        NSLog(@"最多上传4张照片!");
+        NSLog(@"最多上传9张照片!");
         
     }
+    self.activity_indicator_view = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    self.activity_indicator_view.center = _mianScrollView.center;
+    [self.activity_indicator_view setUserInteractionEnabled:YES];//点击不传递事件到button
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleGray];
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    [self.activity_indicator_view setBackgroundColor:[UIColor lightGrayColor]];
+    [_mianScrollView addSubview:self.activity_indicator_view];
+    [self.activity_indicator_view startAnimating];
     dispatch_group_t group = dispatch_group_create();
     dispatch_group_async(group,dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self request];
         
     });
     dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-        
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提醒"
-                                                                       message:@"发表成功"
-                                                                preferredStyle:UIAlertControllerStyleAlert];
-        //取消支付
-        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
-            //这里应该接后台api 将数据输过去，等待平台管理人员确认，再在订单页面显示
-            [self.navigationController popViewControllerAnimated:YES];
-        }];
-        
-        [alert addAction:cancelAction];
-        
-        
-        [self presentViewController:alert animated:YES completion:nil];
+        [self.activity_indicator_view stopAnimating];
+//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提醒"
+//                                                                       message:@"发表成功"
+//                                                                preferredStyle:UIAlertControllerStyleAlert];
+//
+//        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+//            //这里应该接后台api 将数据输过去，等待平台管理人员确认，再在订单页面显示
+//            [self.navigationController popViewControllerAnimated:YES];
+//        }];
+//
+//        [alert addAction:cancelAction];
+//
+//
+//        [self presentViewController:alert animated:YES completion:nil];
     });
     
+}
+-(void)Rigist_textFiledChange:(UITextField *)theTextFiled{
+    
+    
+    if(theTextFiled == self.userName){
+        //NSLog(@"%@",theTextFiled.text);
+        self.title1 = self.userName.text;
+    }
+    NSLog(@"%@",self.title1);
 }
 -(void)request{
     //问题反馈 需要参数：hotelId  appUserId  type
@@ -279,16 +478,12 @@
     NSLog(@"cewfe:%@",self.photoArr);
 
     NSString * url = [NSString stringWithFormat:@"%@/SmartHotelInterface/api/appUser/addCommunityQuestion?%@",URL,para];
-    NSLog(@"url:%@",url);
-    NSLog(@"para:%@",para);
-    NSLog(@"hotelId:%@",self.hotelId);
-    NSLog(@"title:%@",self.userName.text);
-    NSLog(@"content:%@",self.noteTextView.text);
-    NSLog(@"appUserId:%@",self.appUserId);
-    NSLog(@"type:%@",[NSString stringWithFormat:@"%@",self.type]);
-    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.hotelId,@"hotelId",self.userName.text,@"title",self.noteTextView.text,@"content",self.appUserId,@"appUserId",[NSString stringWithFormat:@"%@",self.type],@"type",nil];
-    
-    
+    NSArray *array = [self.louhaoStr componentsSeparatedByString:@"号"];
+    NSArray *array1 = [self.danyuanhaoStr componentsSeparatedByString:@"单"];
+    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.hotelId,@"hotelId",self.title1,@"title",self.noteTextView.text,@"content",self.appUserId,@"appUserId",[NSString stringWithFormat:@"%@",self.type],@"type",self.appUserId,@"appUserId",array[0],@"floorNum",array1[0],@"floorCell",self.roomTF.text,@"roomNum",self.timeTF.text,@"happenTime",nil];
+    NSLog(@"问题反馈url:%@",url);
+    NSLog(@"问题反馈参数:%@",dic);
+
     // 基于AFN3.0+ 封装的HTPPSession句柄
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
     manager.requestSerializer.timeoutInterval = 20;
@@ -328,14 +523,16 @@
         NSLog(@"---上传进度--- %@",uploadProgress);
         
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-        
         NSLog(@"```上传成功``` %@",responseObject);
+        [self.activity_indicator_view stopAnimating];
         NSString * resultCode = [responseObject objectForKey:@"resultDesc"];
         if ([resultCode isEqualToString:@"操作成功"]) {
             UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"提交成功" message:nil preferredStyle:UIAlertControllerStyleAlert];
             UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 NSLog(@"进行后续操作");
+                [self.navigationController popViewControllerAnimated:YES];
             }];
+          
             [alert addAction:sureAction];
             [self presentViewController:alert animated:YES completion:nil];
         }else{
@@ -347,9 +544,9 @@
             [self presentViewController:alert animated:YES completion:nil];
         }
        
-        
+     
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        
+         [self.activity_indicator_view stopAnimating];
         NSLog(@"xxx上传失败xxx %@", error);
         UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"提醒" message:@"上传失败，请重新上传" preferredStyle:UIAlertControllerStyleAlert];
         UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
@@ -357,8 +554,6 @@
         }];
         [alert addAction:sureAction];
         [self presentViewController:alert animated:YES completion:nil];
-        
-        
     }];
 }
 
@@ -410,7 +605,12 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    [self.louhaoDown close];
+    [self.danyuanDown close];
 
+}
 /*
  #pragma mark - Navigation
  

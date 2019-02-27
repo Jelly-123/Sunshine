@@ -9,5 +9,14 @@
 #import <UIKit/UIKit.h>
 
 @interface MainViewController : UIViewController
--(NSString *)encodeString:(NSString*)unencodedString;
+@property(nonatomic,strong)NSString * UserName;
+@property(nonatomic,strong)NSString * PassWord;
+@property(nonatomic,strong)NSString * appUserId;
+//-(NSString *)encodeString:(NSString*)unencodedString;
+
+//存入一个key/value值到addr地址中
+-(void)saveAddr:(NSString *)addr saveKey:(NSString *)key saveValue:(NSString *)value;
+//获取键值为key的值
+-(NSString *)saveAddr:(NSString *)addr getKey:(NSString *)key;
+
 @end

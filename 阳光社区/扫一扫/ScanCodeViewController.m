@@ -246,23 +246,15 @@
     //扫描完成
     if ([metadataObjects count] > 0) {
         //停止扫描
+        [self stopScanning];
         NSString * scan_information = [[metadataObjects firstObject] stringValue];
         if([scan_information containsString:@"addNewLocation.html"]){
             NewAdressViewController * new = [[NewAdressViewController alloc]init];
             new.appUserId = self.appUserId;
             [self.navigationController pushViewController:new animated:YES];
              [self stopScanning];
-//            NSString *path = @"http://59.152.38.197:8991/shiyan_ios/convenient/addNewLocation.html";
-//            WebViewController * web =[[WebViewController alloc]init];
-//            web.url = path;
-//            web.hidesBottomBarWhenPushed = YES;
-//            [self.navigationController pushViewController:web animated:YES];
-//            [self stopScanning];
-            //加载页面
-//                webView = [[WKWebView alloc]initWithFrame:CGRectMake(0,0, SCREEN_WIDTH, SCREEN_HEIGHT)];
-//            [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://59.152.38.197:8991/shiyan/convenient/addNewLocation.html"]]];
-//            [self.view addSubview:webView];
-        }else{
+
+        }else if([scan_information containsString:@"hotelId"]){
             //发送请求
             NSLog(@"scan_information:%@",scan_information);
             NSString * scan = [[scan_information description]stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"{}"]];
@@ -286,7 +278,7 @@
                     }];
                     [alert addAction:sureAction];
                     [self presentViewController:alert animated:YES completion:nil];
-                    [self stopScanning];
+                    
                     //若成功修改，则跳转至登录界面重新登录
                 } FailureBlock:^(id error) {
                     NSLog(@"%@",error);
@@ -296,6 +288,13 @@
                 NSLog(@"完成发送");
 
             });
+        }else{
+            UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"scan result:" message:[[metadataObjects firstObject] stringValue] preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                [self.navigationController popToRootViewControllerAnimated:YES];
+            }];
+            [alert addAction:sureAction];
+            [self presentViewController:alert animated:YES completion:nil];
         }
     }
 }

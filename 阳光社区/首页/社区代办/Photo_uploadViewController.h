@@ -12,4 +12,6 @@
 @property(nonatomic,strong)NSString * appUserId;
 @property(nonatomic,strong)NSString * hotelId;
 @property(nonatomic,strong)NSString * kindsCategroyId;
+@property(nonatomic,strong)NSString * title1;
+@property(nonatomic,strong)UIActivityIndicatorView * activity_indicator_view;
 @end

@@ -14,6 +14,8 @@
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    [manager.requestSerializer setValue:@"application/x-www-form-urlencoded;charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
+
     manager.responseSerializer.acceptableContentTypes =[NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/plain",@"text/html",@"image/png", nil];
     [manager POST:url parameters:dic progress:^(NSProgress * _Nonnull uploadProgress) {
         
@@ -40,6 +42,7 @@
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    [manager.requestSerializer setValue:@"application/x-www-form-urlencoded;charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
     manager.requestSerializer = [AFHTTPRequestSerializer serializer];//    manager.requestSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/plain",@"text/html",nil];
     manager.responseSerializer.acceptableContentTypes =[NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/plain",@"text/html",nil];
     [manager GET:url parameters:dic progress:^(NSProgress * _Nonnull uploadProgress) {
@@ -68,6 +71,7 @@
     
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    [manager.requestSerializer setValue:@"application/x-www-form-urlencoded;charset=UTF-8" forHTTPHeaderField:@"Content-Type"];
     manager.responseSerializer.acceptableContentTypes =[NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/plain",@"application/txt",@"text/html",nil];
     [manager GET:url parameters:dic progress:^(NSProgress * _Nonnull uploadProgress) {
         

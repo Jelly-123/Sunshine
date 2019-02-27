@@ -147,7 +147,7 @@
     [self.userName.layer setMasksToBounds:YES];
     self.userName.layer.borderColor = Color.CGColor;
     self.userName.layer.borderWidth = 1.0f;
-    
+    [self.userName addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.userName];
     
     self.name_label = [[UILabel alloc]init];
@@ -238,7 +238,14 @@
     }
     
     self.photoArr = [[NSMutableArray alloc] initWithArray:[self getBigImageArray]];
-    
+    self.activity_indicator_view = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    self.activity_indicator_view.center = _mianScrollView.center;
+    [self.activity_indicator_view setUserInteractionEnabled:YES];//点击不传递事件到button
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleGray];
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    [self.activity_indicator_view setBackgroundColor:[UIColor lightGrayColor]];
+    [_mianScrollView addSubview:self.activity_indicator_view];
+    [self.activity_indicator_view startAnimating];
     if (self.photoArr.count >9){
         NSLog(@"最多上传4张照片!");
         
@@ -255,6 +262,14 @@
     });
     
 }
+-(void)Rigist_textFiledChange:(UITextField *)theTextFiled{
+    
+    
+    if(theTextFiled == self.userName){
+        self.title1 = self.userName.text;
+    }
+    NSLog(@"%@",self.title1);
+}
 -(void)request{
     //红黑榜 需要参数：hotelId functionID categroyId
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
@@ -264,9 +279,10 @@
     NSLog(@"cewfe:%@",self.photoArr);
     //js调用添加达人时需要传给客户端appUserId、hotelId
     NSString * url = [NSString stringWithFormat:@"%@//SmartHotelInterface/api/community/addRedAndBlack?%@",URL,para];
-    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.hotelId,@"hotelId",self.userName.text,@"title",self.name.text,@"content",self.functionID,@"functionId",self.categroyId,@"categroyId",dateString,@"createTime",nil];
-    
-    
+    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.hotelId,@"hotelId",self.title1,@"title",self.noteTextView.text,@"content",self.functionID,@"functionId",self.categroyId,@"categrogId",dateString,@"createTime",nil];
+    NSLog(@"红黑榜单url:%@",url);
+    NSLog(@"参数:%@",dic);
+    NSLog(@"照片:%@",self.photoArr);
     // 基于AFN3.0+ 封装的HTPPSession句柄
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
     manager.requestSerializer.timeoutInterval = 20;
@@ -307,6 +323,7 @@
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         
         NSLog(@"```上传成功``` %@",responseObject);
+        [self.activity_indicator_view stopAnimating];
         NSString * resultCode = [responseObject objectForKey:@"resultDesc"];
         if ([resultCode isEqualToString:@"操作成功"]) {
             UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"提交成功" message:nil preferredStyle:UIAlertControllerStyleAlert];
@@ -329,6 +346,7 @@
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         
         NSLog(@"xxx上传失败xxx %@", error);
+         [self.activity_indicator_view stopAnimating];
         UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"提醒" message:@"上传失败，请重新上传" preferredStyle:UIAlertControllerStyleAlert];
         UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             

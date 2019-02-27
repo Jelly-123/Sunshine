@@ -149,7 +149,7 @@
     [self.userName.layer setMasksToBounds:YES];
     self.userName.layer.borderColor = Color.CGColor;
     self.userName.layer.borderWidth = 1.0f;
-    
+       [self.userName addTarget:self action:@selector(Rigist_textFiledChange:) forControlEvents:UIControlEventEditingDidEnd];
     [_mianScrollView addSubview:self.userName];
     
     self.name_label = [[UILabel alloc]init];
@@ -250,8 +250,18 @@
         NSLog(@"最多上传9张照片!");
         
     }
+    self.activity_indicator_view = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    self.activity_indicator_view.center = _mianScrollView.center;
+    [self.activity_indicator_view setUserInteractionEnabled:YES];//点击不传递事件到button
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleGray];
+    [self.activity_indicator_view setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    [self.activity_indicator_view setBackgroundColor:[UIColor lightGrayColor]];
+    [_mianScrollView addSubview:self.activity_indicator_view];
+    [self.activity_indicator_view startAnimating];
+   
     dispatch_group_t group = dispatch_group_create();
     dispatch_group_async(group,dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+
         [self request];
         
     });
@@ -262,15 +272,29 @@
     });
     
 }
+
+-(void)Rigist_textFiledChange:(UITextField *)theTextFiled{
+    
+    
+    if(theTextFiled == self.userName){
+        //NSLog(@"%@",theTextFiled.text);
+        self.title1 = self.userName.text;
+    }
+    NSLog(@"%@",self.title1);
+}
 -(void)request{
     //社区代办需要参数appUserId   hotelId  kindsCategroyId
     NSLog(@"cewfe:%@",self.photoArr);
+    NSString * str =[self.title1 stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     NSString * url = [NSString stringWithFormat:@"%@/SmartHotelInterface/api/community/addCommunityAgency?%@",URL,para];
-    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.appUserId, @"appUserId",self.hotelId,@"hotelId",@"lalallalla",@"title",self.kindsCategroyId,@"kindsCategroyId",nil];
+    NSDictionary *dic =[[NSDictionary alloc] initWithObjectsAndKeys:self.appUserId, @"appUserId",self.hotelId,@"hotelId",str,@"title",self.kindsCategroyId,@"kindsCategroyId",nil];
+    NSLog(@"社区代办url:%@",url);
+    NSLog(@"参数:%@",dic);
     
     
     // 基于AFN3.0+ 封装的HTPPSession句柄
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    
     manager.requestSerializer.timeoutInterval = 20;
     manager.requestSerializer = [AFJSONRequestSerializer serializer];
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
@@ -308,7 +332,8 @@
         
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         
-        NSLog(@"```上传成功``` %@",responseObject);
+        NSLog(@"```上传成功``` %@",responseObject[@"resultDesc"]);
+        [self.activity_indicator_view stopAnimating];
         NSString * resultCode = [responseObject objectForKey:@"resultDesc"];
         if ([resultCode isEqualToString:@"操作成功"]) {
             UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"提交成功" message:nil preferredStyle:UIAlertControllerStyleAlert];
@@ -329,7 +354,7 @@
    
         
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        
+        [self.activity_indicator_view stopAnimating];
         NSLog(@"xxx上传失败xxx %@", error);
         UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"提醒" message:@"上传失败，请重新上传" preferredStyle:UIAlertControllerStyleAlert];
         UIAlertAction * sureAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {

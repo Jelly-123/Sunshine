@@ -10,10 +10,12 @@
 #define ToolHeader_h
 
 
+
 #endif /* ToolHeader_h */
-static NSString * shopURL = @"http://223.75.12.177:8990";
-static NSString * URL = @"http://223.75.12.177:8188";
-static NSString * darenurl = @"http://223.75.12.177:8990";
+static NSString * shopURL = @"http://58.19.198.120:8990";
+static NSString * URL = @"http://58.19.198.120:8188";
+static NSString * dangyuanURL = @"http://58.19.198.121:8788";   //党员注册和其他的端口不一样
+static NSString * darenurl = @"http://58.19.198.120:8990";
 static NSString * baseUrl = @"59.152.38.197"; //远程服务器端口
 static NSString * para = @"requestUser=sxbctv&requestPassword=123456";      //固定参数
 static NSString * port_1 = @"8188"; //党建和社区

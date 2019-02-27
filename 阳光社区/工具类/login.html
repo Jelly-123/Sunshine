@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录账号</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="js/libs/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet/less" href="css/index.less">
+    <link rel="stylesheet/less" href="css/dangjian.less">
+    <script type="text/javascript"  src="js/libs/less/less.js"></script>
+</head>
+<body>
+<header>
+    <div class="headerTit">登录</div>
+</header>
+<section style="margin: 60px 0 0 0;">
+    <div class="name">
+        <div class="div_f">
+            <div class="div_col" id="me">
+                <div class="div_c_l"><span>用户名</span>
+                </div>
+                <div class="div_c_r"><input type="text" style="width:calc(100% - 16px);" name="name" id="name" placeholder="请填写用户名">
+                    <span style="float: right;margin-top: -30px;background:#fff" id="tish"></span></input>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <div class="div_f">
+            <div class="div_col" id="me">
+                <div class="div_c_l"><span>密码</span>
+                </div>
+                <div class="div_c_r"><input type="password" style="width:calc(100% - 16px);" name="password" id="password" onkeydown="" value="" placeholder="6~20位数字、字符任意组合">
+                    <span style="float: right;margin-top: -30px;background:#fff" id="ts"></span></input>
+                </div>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <button id="submit" class="btn_1">登录</button>
+        <div class="login">
+            <ul>
+                <li style="text-align: center;font-size: 14px">
+                    未有账号？
+                    <a href="register.html" style="color: red">立即注册</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+
+<div class="addToShopCar">
+    <p></p>
+</div>
+</body>
+<script src="js/libs/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" >
+    $(function(){
+        // var smartWriteSrc = sessionStorage.getItem("smartWriteSrc");
+        //var smartSrc = sessionStorage.getItem("smartSrc");
+        //document.getElementById("name").value = localStorage.getItem('userName');
+        //document.getElementById("password").value = localStorage.getItem('userPass');
+        $("#submit").on('click',function(){
+            //console.log('aaa');
+            var userName = $('#name').val();
+            var userPass = $('#password').val();
+            localStorage.setItem('userName',userName);
+            localStorage.setItem('userPass',userPass);
+            $(".addToShopCar").css("display","block");
+            setTimeout(function delay(){
+                $(".addToShopCar p").html(localStorage.getItem('userName'),localStorage.getItem('userPass'));
+                console.log(localStorage.getItem('userName'),localStorage.getItem('userPass'))
+                $(".addToShopCar").css("display","none");
+                //history.go(0);
+            },1000);
+            // $.ajax({
+            //     type     : "post",
+            //     url      : 'http://223.75.12.178:8788/SmartHotelInterface/api/appUser/login?requestUser=sxbctv&requestPassword=123456',
+            //     data     :{userName : encodeURI(userName), password : encodeURI(userPass),  loginType : '0'},
+            //     success:function(data){
+            //         console.log(data);
+            //         if (data.resultCode && data.resultCode == 200) {
+            //             $('.login').css('display','none');
+            //             $('.button').css('display','block');
+            //             localStorage.setItem('appUserId',data.data.id);
+            //             localStorage.setItem('userName',呵呵);
+            //             window.location.href = "www.baidu.com";
+            //         }else if (data.resultCode && data.resultCode == 302) {
+            //             $('.login ul li').eq(1).find('input[type="password"]').val('');
+            //             $(".addToShopCar").css("display","block");
+            //             setTimeout(function delay(){
+            //                 $(".addToShopCar").css("display","none");
+            //                 //history.go(0);
+            //             },1000);
+            //
+            //         }
+            //     },
+            //
+            //     error:function(data){
+            //
+            //     }
+            // });
+        })
+
+
+    });
+</script>
+</html>

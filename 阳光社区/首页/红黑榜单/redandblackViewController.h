@@ -12,4 +12,7 @@
 @property(nonatomic,strong)NSString * categroyId;
 @property(nonatomic,strong)NSString * functionID;
 @property(nonatomic,strong)NSString * hotelId;
+@property(nonatomic,strong)NSString * title1;
+@property(nonatomic,strong)NSString * content;
+@property(nonatomic,strong)UIActivityIndicatorView * activity_indicator_view;
 @end

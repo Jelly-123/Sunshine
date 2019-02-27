@@ -12,4 +12,9 @@
 @property(nonatomic,strong)NSString * appUserId;
 @property(nonatomic,strong)NSString * hotelId;
 @property(nonatomic,strong)NSString * type;
+@property(nonatomic,strong)NSString * title1;
+@property(nonatomic,strong)NSString * question;
+@property(nonatomic,strong)NSString * louhaoStr;
+@property(nonatomic,strong)NSString * danyuanhaoStr;
+@property(nonatomic,strong)UIActivityIndicatorView * activity_indicator_view;
 @end

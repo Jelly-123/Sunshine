@@ -15,13 +15,15 @@
 #import "Photo_uploadViewController.h"
 #import "redandblackViewController.h"
 #import "WebViewController.h"
-
+#import "RegisterViewController.h"
 
 @interface MainViewController ()<WKUIDelegate,WKNavigationDelegate,WKScriptMessageHandler>{
     WKWebView * webView;
     WKWebView * lunbo_webView;
+//    WKNavigation * backNavigation;
     WKUserContentController* userContentController;
 }
+@property(nonatomic,strong)WKNavigation * backNavigation;
 @end
 
 @implementation MainViewController
@@ -34,22 +36,34 @@
     }
 }
 - (void)viewWillAppear:(BOOL)animated {
+  
     [super viewWillAppear:animated];
     [self.navigationController setNavigationBarHidden:YES animated:YES];
     
     
     //注册方法
     [userContentController addScriptMessageHandler:self name:@"woyaofanhui"];
-    [userContentController addScriptMessageHandler:self name:@"saoyisao"];
+    [userContentController addScriptMessageHandler:self name:@"saoyisao"];  //扫一扫部分
     [userContentController addScriptMessageHandler:self name:@"tianjiadaren"];
     [userContentController addScriptMessageHandler:self name:@"redAndBlack"];
     [userContentController addScriptMessageHandler:self name:@"daiban"];
     [userContentController addScriptMessageHandler:self name:@"questionFeedback"];
-    [userContentController addScriptMessageHandler:self name:@"luobotu"];
+    [userContentController addScriptMessageHandler:self name:@"luobotu"];   //首页轮播图部分
+    [userContentController addScriptMessageHandler:self name:@"ganjinhao"];
+    [userContentController addScriptMessageHandler:self name:@"registerdangyuan"];
+    
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+//    webView = [[WKWebView alloc]initWithFrame:self.view.frame];
+//    NSString *documentPath=[[NSBundle mainBundle] bundlePath];
+//    NSString *filePath = [NSString stringWithFormat:@"%@%@",documentPath,@"/css/login.html"];
+//    NSString *htmlString = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
+//    [webView loadHTMLString:htmlString baseURL:[NSURL URLWithString:@"file:///工具类/"]];
+//    [self.view addSubview:webView];
+//
+    
     UIBarButtonItem *backBtn = [[UIBarButtonItem alloc] init];
     backBtn.title = @"返回";
     self.navigationItem.backBarButtonItem = backBtn;
@@ -62,28 +76,33 @@
     WKWebViewConfiguration * configuration = [[WKWebViewConfiguration alloc]init];
     userContentController =[[WKUserContentController alloc]init];
     configuration.userContentController = userContentController;
-    webView = [[WKWebView alloc]initWithFrame:self.view.frame configuration:configuration];
     
-   
-    [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://223.75.12.177:8188/SmartHotelInterface/shiyan_ios/index.html"]]];
-    webView.UIDelegate = self;
-    webView.navigationDelegate = self;
-    [self.view addSubview:webView];
+//    WKProcessPool * processPool =[[WKProcessPool alloc]init];
+//    configuration.processPool = processPool;
+//    WKUserScript * cookieScript = [[WKUserScript alloc]initWithSource:[self ] injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
     
-    
-//    webView.scrollView.contentInset = UIEdgeInsetsMake(0, 0, 50, 0);
-//    if (@available(iOS11.0, *)) {
-//        
-//        self.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-//        
-//    } else {
-//        
-//        self.automaticallyAdjustsScrollViewInsets =NO;
-//        
-//    }
-    
+    configuration.preferences.javaScriptEnabled = YES;//是否支持javaScript
+    configuration.preferences.javaScriptCanOpenWindowsAutomatically = NO;//是否能自动打开窗口
 
+    webView = [[WKWebView alloc]initWithFrame:self.view.frame configuration:configuration];
+    webView.allowsBackForwardNavigationGestures=YES;
+    
+    [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://58.19.198.120:8188/SmartHotelInterface/shiyan_ios/index.html"]]];
+//
+//    NSString *documentPath=[[NSBundle mainBundle] bundlePath];
+//    NSString *filePath = [NSString stringWithFormat:@"%@%@",documentPath,@"/css/login.html"];
+//    NSString *htmlString = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
+//    [webView loadHTMLString:htmlString baseURL:[NSURL URLWithString:@"file:///工具类/"]];
+//    NSString * jsStr = [NSString stringWithFormat:@"bixuhao"];
+//    [webView evaluateJavaScript:jsStr completionHandler:^(id _Nullable result, NSError * _Nullable error) {
+//        NSLog(@"==%@----%@",result,error);
+//    }];
+    webView.UIDelegate = self;
+    webView.navigationDelegate = self;//在这个代理相应的协议方法可以监听加载网页的周期和结果
+    [self.view addSubview:webView];
 }
+
+
 #pragma mark -- WKScriptMessageHandler
 /**
  *  JS 调用 OC 时 webview 会调用此方法
@@ -121,7 +140,6 @@
         
     } else if ([message.name isEqualToString:@"daiban"]) {
         NSLog(@"社区代办");
-      
         Photo_uploadViewController * daiban = [[Photo_uploadViewController alloc]init];
         daiban.appUserId = [message.body objectForKey:@"appUserId"];
         daiban.kindsCategroyId =[message.body objectForKey:@"kindsCategroyId"];
@@ -136,67 +154,89 @@
         question.type = [message.body objectForKey:@"type"];
         [self.navigationController pushViewController:question animated:YES];
         
-    } else if([message.name isEqualToString:@"luobotu"]){
+    }
+    else if([message.name isEqualToString:@"luobotu"]){
         NSLog(@"轮播图");
         WebViewController * web = [[WebViewController alloc]init];
         web.url =[message.body objectForKey:@"URL"];
+
         [self.navigationController pushViewController:web animated:YES];
-    }else{
-        if([message.name isEqualToString:@"woyaofanhui"]){
+
+        
+    }
+    else if([message.name isEqualToString:@"woyaofanhui"]){
             NSLog(@"返回上一页");
             [self.navigationController popViewControllerAnimated:YES];
-        }
+    }else if([message.name isEqualToString:@"ganjinhao"]) {
+            NSLog(@"将收到的用户名和密码存在本地");
+            self.UserName = [message.body objectForKey:@"userName"];
+            self.PassWord = [message.body objectForKey:@"userPass"];
+            self.appUserId = [message.body objectForKey:@"appUserId"];
+            [self saveAddr:@"UserName.plist" saveKey:@"UserName" saveValue:self.UserName];
+            [self saveAddr:@"UserPass.plist" saveKey:@"UserPass" saveValue:self.PassWord];
+            [self saveAddr:@"appUserId.plist" saveKey:@"appUserId" saveValue:self.appUserId];
+    }else if([message.name isEqualToString:@"registerdangyuan"]) {
+        RegisterViewController * registerVC =[[RegisterViewController alloc]init];
+        registerVC.appUserId =[message.body objectForKey:@"appUserId"];
+        registerVC.areaId = [message.body objectForKey:@"areaId"];
+        [self.navigationController pushViewController:registerVC animated:YES];
+        
     }
     
     
+
 }
-//// 在请求开始加载之前，决定是否跳转
+// 页面加载完成之后调用
+//- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation{
+////    [SVProgressHUDdismiss];
+//
+//    NSString * para = [NSString stringWithFormat:@"UserName:%@+UserPass:%@+appUserId:%@",[self saveAddr:@"UserName.plist" getKey:@"UserName"],[self saveAddr:@"UserPass.plist" getKey:@"UserPass"],[self saveAddr:@"appUserId.plist" getKey:@"appUserId"]];
+//    NSLog(@"准备要给前端传了,看看我传的是什么：%@",para);
+//    NSString * jsStr = [NSString stringWithFormat:@"bixuhao('%@')",para];
+//    [webView evaluateJavaScript:jsStr completionHandler:^(id _Nullable result, NSError * _Nullable error) {
+//        NSLog(@"==%@----%@",result,error);
+//    }];
+//}
+
+
+// 在请求开始加载之前，决定是否跳转
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler{
 
     NSString *url = [navigationAction.request.URL.absoluteString stringByRemovingPercentEncoding];
     NSLog(@"url%@",url);
-    
+
     if ([navigationAction.request.URL.absoluteString containsString:@"alipays:"]) {
         NSLog(@"我要跳转了");
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
         decisionHandler(WKNavigationActionPolicyAllow);
         return;
     }
-//    if([navigationAction.request.URL.absoluteString hasPrefix:@"https://"]){
-//        NSLog(@"咋没跳到这儿");
-//
+//    if ([navigationAction.request.URL.absoluteString containsString:@"http:"]) {
+//        NSLog(@"我是http");
 //        decisionHandler(WKNavigationActionPolicyAllow);
+//        return;
 //    }
-    if ([navigationAction.request.URL.absoluteString containsString:@"http:"]) {
-        NSLog(@"我是http");
-
-        decisionHandler(WKNavigationActionPolicyAllow);
-        return;
-    }
-
-   
+    decisionHandler(WKNavigationActionPolicyAllow);
 }
--(NSString *)encodeString:(NSString*)unencodedString{
-        
-        // CharactersToBeEscaped = @":/?&=;+!@#$()~',*";
-        
-        // CharactersToLeaveUnescaped = @"[].";
-        
-        NSString *encodedString = (NSString *)
-        
-        CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-                                                                  
-                                                                  (CFStringRef)unencodedString,
-                                                                  
-                                                                  NULL,
-                                                                  
-                                                                  (CFStringRef)@"!*'();:@&=+$,/?%#[]",
-                                                                  
-                                                                  kCFStringEncodingUTF8));
-        
-        return encodedString;
-        
+- (void)saveAddr:(NSString *)addr saveKey:(NSString *)key saveValue:(NSString *)value{
+    NSArray *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsPath = [path objectAtIndex:0];
+    NSString *filename = [documentsPath stringByAppendingPathComponent:addr];
+    NSMutableDictionary *saveDic = [[NSMutableDictionary alloc]init];
+    [saveDic setObject:value forKey:key];
+    [saveDic writeToFile:filename atomically:YES];
 }
+
+- (NSString *)saveAddr:(NSString *)addr getKey:(NSString *)key{
+    NSArray *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsPath = [path objectAtIndex:0];
+    NSString *filename = [documentsPath stringByAppendingPathComponent:addr];
+    
+    NSMutableDictionary *saveDic = [[NSMutableDictionary alloc]initWithContentsOfFile:filename];
+    return saveDic[key];
+}
+
+
 
 - (void)viewWillDisappear:(BOOL)animated
 {
@@ -210,9 +250,40 @@
     [webView.configuration.userContentController removeScriptMessageHandlerForName:@"questionFeedback"];
     [webView.configuration.userContentController removeScriptMessageHandlerForName:@"woyaofanhui"];
     [webView.configuration.userContentController removeScriptMessageHandlerForName:@"luobotu"];
+    [webView.configuration.userContentController removeScriptMessageHandlerForName:@"ganjinhao"];
+    [webView.configuration.userContentController removeScriptMessageHandlerForName:@"registerdangyuan"];
 }
 
-
+- (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"提示" message:message?:@"" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        completionHandler();
+    }])];
+    [self presentViewController:alertController animated:YES completion:nil];
+    
+}
+- (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL))completionHandler{
+    //    DLOG(@"msg = %@ frmae = %@",message,frame);
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"提示" message:message?:@"" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        completionHandler(NO);
+    }])];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        completionHandler(YES);
+    }])];
+    [self presentViewController:alertController animated:YES completion:nil];
+}
+- (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSString *)prompt defaultText:(NSString *)defaultText initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSString * _Nullable))completionHandler{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:prompt message:@"" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.text = defaultText;
+    }];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"完成" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        completionHandler(alertController.textFields[0].text?:@"");
+    }])];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
+}
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
